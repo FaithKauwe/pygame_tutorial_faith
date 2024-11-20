@@ -35,17 +35,57 @@ class Apple(GameObject):
     def reset(self):
         self.rect.x = random.randint(50, 400)
         self.rect.y = -self.rect.height  # Reset to just above the screen
+class Player(GameObject):
+  def __init__(self):
+    super(Player, self).__init__(0, 0, 'player.png')
+    self.dx = 0
+    self.dy = 0
+    self.reset()
 
+  def left(self):
+    pass
+
+  def right(self):
+    pass
+
+  def up(self):
+    pass
+
+  def down(self):
+    pass
+
+  def move(self):
+    self.x -= (self.x - self.dx) * 0.25
+    self.y -= (self.y - self.dy) * 0.25
+
+  def reset(self):
+    self.x = 250 - 32
+    self.y = 250 - 32
 # Create an instance of Apple
 apple = Apple()
+
+# make an instance of Player
+player = Player()
 
 # Create the game loop
 running = True
 while running:
-    # Look at events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+  # Looks at events
+  for event in pygame.event.get():
+    if event.type == pygame.QUIT:
+      running = False
+    # Check for event type KEYBOARD
+    elif event.type == pygame.KEYDOWN:
+      if event.key == pygame.K_ESCAPE:
+        running = False
+      elif event.key == pygame.K_LEFT:
+        print('LEFT')
+      elif event.key == pygame.K_RIGHT:
+        print('RIGHT')
+      elif event.key == pygame.K_UP:
+        print('UP')
+      elif event.key == pygame.K_DOWN:
+        print('DOWN')
   
     # Draw a circle
     screen.fill((255, 255, 255))
@@ -53,7 +93,11 @@ while running:
     # Move and draw the apple
     apple.move()  # Move the apple
     apple.render(screen)  # Render the apple
-  
+    
+    # Draw player 
+    player.move()
+    player.render(screen)
+
     # Update the window
     pygame.display.flip()
     # Tick the clock!
