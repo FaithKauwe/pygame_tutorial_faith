@@ -11,66 +11,66 @@ lanes = [93, 218, 343]  # Lane positions for player movement
 
 # Game Object Class
 class GameObject(pygame.sprite.Sprite):
-    def __init__(self, x, y, width, height):
-        super(GameObject, self).__init__()
-        self.surf = pygame.Surface((width, height))
-        self.surf.fill((255, 0, 255))  # Default color, can be changed if using an image
-        self.rect = self.surf.get_rect(topleft=(x, y))  # Set the position of the rect
+    def __init__(self, x, y, image):
+        self.surf = pygame.image.load(image)
         self.x = x
         self.y = y
+        self.rect = self.surf.get_rect()
 
 
     def render(self, screen):
         self.rect.x = self.x  # Update rect's x position
         self.rect.y = self.y  # Update rect's y position
-        screen.blit(self.surf, self.rect.topleft)
+        screen.blit(self.surf, (self.x, self.y))
 
 # Strawberry Class
 class Strawberry(GameObject):
     def __init__(self):
-        # Load the strawberry image and set its size
-        strawberry_image = pygame.image.load('strawberry.png')
-        strawberry_width, strawberry_height = strawberry_image.get_size()
-        super(Strawberry, self).__init__(randint(50, 400), -64, strawberry_width, strawberry_height)
-        self.dy = (randint(0, 200) / 100) + 1
+        
+        super(Strawberry, self).__init__(0,0,'strawberry.png')
+        self.dx = (randint(0, 200) / 100) + 1
+        self.dy = 0
+        self.reset()
 
     def move(self):
-        self.rect.y += self.dy  # Move down the screen
+        self.x += self.dx  # Move down the screen
+        self.y += self.dy 
+        
         if self.rect.y > 500:
             self.reset()
 
     def reset(self):
-        self.rect.x = choice(lanes)  # Reset to one of the lanes
-        self.rect.y = -64  # Reset to just above the screen
+        self.x = choice(lanes)  # Reset to one of the lanes
+        self.y = -64  # Reset to just above the screen
 
 # Apple Class
 class Apple(GameObject):
     def __init__(self):
-        # Use the image dimensions instead of 0, 0 for the position
-        apple_image = pygame.image.load('apple.png')
-        apple_width, apple_height = apple_image.get_size()
-        super(Apple, self).__init__(randint(50, 400), -64, apple_width, apple_height)
+        super(Apple, self).__init__(0,0,'apple.png')
+        self.dx = 0
         self.dy = (randint(0, 200) / 100) + 1
-
+        self.reset()
 
 
     def move(self):
-        self.rect.y += self.dy  # Move down the screen
-        if self.rect.y > 500:
+        self.x += self.dx  # Move down the screen
+        self.y += self.dy 
+        if self.y > 500:
             self.reset()
 
     def reset(self):
-        self.rect.x = choice(lanes)  # Reset to one of the lanes
-        self.rect.y = -64  # Reset to just above the screen
+        self.x = choice(lanes)  # Reset to one of the lanes
+        self.y = -64  # Reset to just above the screen
 
 
 # Player Class
 class Player(GameObject):
     def __init__(self):
-        super(Player, self).__init__(0, 0, 50, 50)  # Assuming 50x50 for player
+        super(Player, self).__init__(0, 0, 'player.png')  
         self.dx = 0
         self.dy = 0
         self.pos_x = 1  # Lane position for player
+        self.pos_y = 1  # Lane position for player
         self.reset()
 
     def left(self):
@@ -82,89 +82,135 @@ class Player(GameObject):
         if self.pos_x < len(lanes) - 1:
             self.pos_x += 1
             self.update_dx_dy()
+    
+    def up(self):
+        if self.pos_y < 0:
+            self.pos_y += 1
+            self.update_dx_dy()
+    
+    def down(self):
+        if self.pos_y < len(lanes) - 1:
+            self.pos_y += 1
+            self.update_dx_dy()
 
     def move(self):
-        self.x = lanes[self.pos_x]  # Update x to current lane
+        self.x -= (self.x - self.dx) * 0.25
+        self.y -= (self.y - self.dy) * 0.25
         self.reset()  # Update position based on current lane
 
     def reset(self):
         self.x = lanes[self.pos_x]
-        self.y = 343  # Position player on the lane vertically
+        self.y = lanes[self.pos_y]
+        self.dx = self.x
+        self.dy = self.y
 
     def update_dx_dy(self):
         self.dx = lanes[self.pos_x]
+        self.dy = lanes[self.pos_y]
 
 class Bomb(GameObject):
     def __init__(self):
-        # Load the bomb image and set its size (assuming bomb.png exists)
-        bomb_image = pygame.image.load('bomb.png')  # Replace with your actual bomb image filename
-        bomb_width, bomb_height = bomb_image.get_size()
-        super(Bomb, self).__init__(randint(50, 400), -64, bomb_width, bomb_height)
-        self.dy = (randint(1, 200) / 100) + 2  # Adjust falling speed if needed
+        super(Bomb, self).__init__(0,0, 'bomb.png')
+        self.dx = 0
+        self.dy = 0
+        self.reset()
 
     def move(self):
-        self.rect.y += self.dy  # Move bomb down the screen
-        if self.rect.y > 500:  # Reset bomb position when it goes off screen
+        self.x += self.dx  # Move bomb down the screen
+        self.y += self.dy  # Move bomb down the screen
+        if self.x > 500 or self.x < -64 or self.y > 500 or self.y < -64:
             self.reset()
 
     def reset(self):
-        self.rect.x = choice(lanes)  # Reset to a lane
-        self.rect.y = -self.rect.height  # Reset to just above the screen
+        direction = randint(1,4)
+        if direction == 1:
+            self.x = -64
+            self.y = choice(lanes)
+            self.dx = (randint(0, 200) / 100) + 1
+            self.dy = 0
 
+        elif direction == 2:
+            self.x = 500
+            self.y = choice(lanes)
+            self.dx = (randint(0, 200) / 100) - 1
+            self.dy = 0
+        
+        elif direction == 3:
+            self.x = -64
+            self.y = choice(lanes)
+            self.dx = (randint(0, 200) / 100) + 1
+            self.dy = 0
 
-# Create instances of Fruit and Player
+        elif direction == 4:
+            self.x = 500
+            self.y = choice(lanes)
+            self.dx = (randint(0, 200) / 100) - 1
+            self.dy = 0
+# Make a group
+all_sprites = pygame.sprite.Group()
+# make a fruits Group
+fruit_sprites = pygame.sprite.Group()
+
+# Make Fruit instances
 apple = Apple()
 strawberry = Strawberry()
+fruit_sprites.add(apple)
+fruit_sprites.add(strawberry)
+
+# make instance of Player
 player = Player()
+
+# make bomb
 bomb = Bomb()
 
-# Create groups for sprites
-all_sprites = pygame.sprite.Group()
-fruit_sprites = pygame.sprite.Group()  # Group for fruit
-
-# Add sprites to the groups
+# Add sprites to group
 all_sprites.add(player)
 all_sprites.add(apple)
 all_sprites.add(strawberry)
 all_sprites.add(bomb)
-fruit_sprites.add(apple)
-fruit_sprites.add(strawberry)
+
+# Get the clock
+clock = pygame.time.Clock()
+
 
 # Create the game loop
 running = True
 while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
-            elif event.key == pygame.K_LEFT:
-                player.left()
-            elif event.key == pygame.K_RIGHT:
-                player.right()
+  # Looks at events
+  for event in pygame.event.get():
+    if event.type == pygame.QUIT:
+      running = False
+    elif event.type == pygame.KEYDOWN:
+      if event.key == pygame.K_ESCAPE:
+        running = False
+      elif event.key == pygame.K_LEFT:
+        player.left()
+      elif event.key == pygame.K_RIGHT:
+        player.right()
+      elif event.key == pygame.K_UP:
+        player.up()
+      elif event.key == pygame.K_DOWN:
+        player.down()
 
-    # Clear the screen
-    screen.fill((255, 255, 255))
+  # Clear screen
+  screen.fill((255, 255, 255))
+  # Move and render Sprites
+  for entity in all_sprites:
+    entity.move()
+    entity.render(screen)
+    if entity != player: 
+      pass
+  # Check Collisions
+  fruit = pygame.sprite.spritecollideany(player, fruit_sprites)
+  if fruit:
+    fruit.reset()
 
-    # Move and render Sprites
-    for entity in all_sprites:
-        entity.move()  # Update position based on movement logic
-        entity.render(screen)  # Render the entity
+  # Check collision player and bomb
+  if pygame.sprite.collide_rect(player, bomb):
+    running = False
 
-    # Check for collisions between player and fruit
-    fruit = pygame.sprite.spritecollideany(player, fruit_sprites)
-    if fruit:
-        fruit.reset()  # Reset the fruit if a collision occurs
+  # Update the window
+  pygame.display.flip()
 
-    # Check collision between player and bomb (if bomb sprite is defined)
-    if pygame.sprite.collide_rect(player, bomb):  # Assume bomb is defined somewhere
-        running = False  # End game if player collides with the bomb
-
-    # Update the window
-    pygame.display.flip()
-    clock.tick(60)  # Maintain 60 FPS
-
-# Quit pygame
-pygame.quit()
-
+  # tick the clock!
+  clock.tick(30)
