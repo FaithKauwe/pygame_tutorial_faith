@@ -1,151 +1,162 @@
+# Example 6
+
 # Import and initialize pygame
 import pygame
-from random import random, randint, choice
+from random import randint, choice
 pygame.init()
-
 # Configure the screen
 screen = pygame.display.set_mode([500, 500])
-# Get the clock
-clock = pygame.time.Clock()
-lanes = [93, 218, 343]  # Lane positions for player movement
 
-# Game Object Class
+# Lanes
+lanes = [93, 218, 343]
+
+# ----------------------------------------------
+# Game Object
 class GameObject(pygame.sprite.Sprite):
-    def __init__(self, x, y, image):
-        self.surf = pygame.image.load(image)
-        self.x = x
-        self.y = y
-        self.rect = self.surf.get_rect()
+  def __init__(self, x, y, image):
+    super(GameObject, self).__init__()
+    self.surf = pygame.image.load(image)
+    self.x = x
+    self.y = y
+    self.rect = self.surf.get_rect()
 
+  def render(self, screen):
+    self.rect.x = self.x
+    self.rect.y = self.y
+    screen.blit(self.surf, (self.x, self.y))
 
-    def render(self, screen):
-        self.rect.x = self.x  # Update rect's x position
-        self.rect.y = self.y  # Update rect's y position
-        screen.blit(self.surf, (self.x, self.y))
-
-# Strawberry Class
-class Strawberry(GameObject):
-    def __init__(self):
-        
-        super(Strawberry, self).__init__(0,0,'strawberry.png')
-        self.dx = (randint(0, 200) / 100) + 1
-        self.dy = 0
-        self.reset()
-
-    def move(self):
-        self.x += self.dx  # Move down the screen
-        self.y += self.dy 
-        
-        if self.rect.y > 500:
-            self.reset()
-
-    def reset(self):
-        self.x = choice(lanes)  # Reset to one of the lanes
-        self.y = -64  # Reset to just above the screen
-
-# Apple Class
+# ----------------------------------------------
+# Apple
 class Apple(GameObject):
-    def __init__(self):
-        super(Apple, self).__init__(0,0,'apple.png')
-        self.dx = 0
-        self.dy = (randint(0, 200) / 100) + 1
-        self.reset()
+  def __init__(self):
+    super(Apple, self).__init__(0, 0, 'apple.png')
+    self.dx = 0
+    self.dy = (randint(0, 200) / 100) + 1
+    self.reset()
+
+  def move(self):
+    self.x += self.dx
+    self.y += self.dy
+    if self.y > 500:
+      self.reset()
+
+  def reset(self):
+    self.x = choice(lanes)
+    self.y = -64
+
+# ----------------------------------------------
+# Strawberry
 
 
-    def move(self):
-        self.x += self.dx  # Move down the screen
-        self.y += self.dy 
-        if self.y > 500:
-            self.reset()
+class Strawberry(GameObject):
+  def __init__(self):
+    super(Strawberry, self).__init__(0, 0, 'strawberry.png')
+    self.dx = (randint(0, 200) / 100) + 1
+    self.dy = 0
+    self.reset()
 
-    def reset(self):
-        self.x = choice(lanes)  # Reset to one of the lanes
-        self.y = -64  # Reset to just above the screen
+  def move(self):
+    self.x += self.dx
+    self.y += self.dy
+    if self.x > 500:
+      self.reset()
+
+  def reset(self):
+    self.x = -64
+    self.y = choice(lanes)
 
 
-# Player Class
-class Player(GameObject):
-    def __init__(self):
-        super(Player, self).__init__(0, 0, 'player.png')  
-        self.dx = 0
-        self.dy = 0
-        self.pos_x = 1  # Lane position for player
-        self.pos_y = 1  # Lane position for player
-        self.reset()
-
-    def left(self):
-        if self.pos_x > 0:
-            self.pos_x -= 1
-            self.update_dx_dy()
-
-    def right(self):
-        if self.pos_x < len(lanes) - 1:
-            self.pos_x += 1
-            self.update_dx_dy()
-    
-    def up(self):
-        if self.pos_y < 0:
-            self.pos_y += 1
-            self.update_dx_dy()
-    
-    def down(self):
-        if self.pos_y < len(lanes) - 1:
-            self.pos_y += 1
-            self.update_dx_dy()
-
-    def move(self):
-        self.x -= (self.x - self.dx) * 0.25
-        self.y -= (self.y - self.dy) * 0.25
-        self.reset()  # Update position based on current lane
-
-    def reset(self):
-        self.x = lanes[self.pos_x]
-        self.y = lanes[self.pos_y]
-        self.dx = self.x
-        self.dy = self.y
-
-    def update_dx_dy(self):
-        self.dx = lanes[self.pos_x]
-        self.dy = lanes[self.pos_y]
+# -------------------------------------------
+# Bomb
 
 class Bomb(GameObject):
-    def __init__(self):
-        super(Bomb, self).__init__(0,0, 'bomb.png')
-        self.dx = 0
-        self.dy = 0
-        self.reset()
+  def __init__(self):
+    super(Bomb, self).__init__(0, 0, 'bomb.png')
+    self.dx = 0
+    self.dy = 0
+    self.reset()
 
-    def move(self):
-        self.x += self.dx  # Move bomb down the screen
-        self.y += self.dy  # Move bomb down the screen
-        if self.x > 500 or self.x < -64 or self.y > 500 or self.y < -64:
-            self.reset()
+  def move(self):
+    self.x += self.dx
+    self.y += self.dy
+    if self.x > 500 or self.x < -64 or self.y > 500 or self.y < -64:
+      self.reset()
 
-    def reset(self):
-        direction = randint(1,4)
-        if direction == 1:
-            self.x = -64
-            self.y = choice(lanes)
-            self.dx = (randint(0, 200) / 100) + 1
-            self.dy = 0
+  def reset(self):
+    direction = randint(1, 4)
+    if direction == 1: # left
+      self.x = -64
+      self.y = choice(lanes)
+      self.dx = (randint(0, 200) / 100) + 1
+      self.dy = 0
+    elif direction == 2: # right
+      self.x = 500
+      self.y = choice(lanes)
+      self.dx = ((randint(0, 200) / 100) + 1) * -1
+      self.dy = 0
+    elif direction == 3: # down
+      self.x = choice(lanes)
+      self.y = -64
+      self.dx = 0
+      self.dy = (randint(0, 200) / 100) + 1
+    else:
+      self.x = choice(lanes)
+      self.y = 500
+      self.dx = 0
+      self.dy = ((randint(0, 200) / 100) + 1) * -1
 
-        elif direction == 2:
-            self.x = 500
-            self.y = choice(lanes)
-            self.dx = (randint(0, 200) / 100) - 1
-            self.dy = 0
-        
-        elif direction == 3:
-            self.x = -64
-            self.y = choice(lanes)
-            self.dx = (randint(0, 200) / 100) + 1
-            self.dy = 0
+    
+# -------------------------------------------
+# Player
 
-        elif direction == 4:
-            self.x = 500
-            self.y = choice(lanes)
-            self.dx = (randint(0, 200) / 100) - 1
-            self.dy = 0
+
+class Player(GameObject):
+  def __init__(self):
+    super(Player, self).__init__(0, 0, 'player.png')
+    self.dx = 0
+    self.dy = 0
+    self.pos_x = 1
+    self.pos_y = 1
+    self.reset()
+
+  def left(self):
+    if self.pos_x > 0:
+      self.pos_x -= 1
+    self.update_dx_dy()
+
+  def right(self):
+    if self.pos_x < len(lanes) - 1:
+      self.pos_x += 1
+    self.update_dx_dy()
+
+  def up(self):
+    if self.pos_y > 0:
+      self.pos_y -= 1
+    self.update_dx_dy()
+
+  def down(self):
+    if self.pos_y < len(lanes) - 1:
+      self.pos_y += 1
+    self.update_dx_dy()
+
+  def move(self):
+    self.x -= (self.x - self.dx) * 0.25
+    self.y -= (self.y - self.dy) * 0.25
+
+  def reset(self):
+    self.x = lanes[self.pos_x]
+    self.y = lanes[self.pos_y]
+    self.dx = self.x
+    self.dy = self.y
+  
+  def update_dx_dy(self):
+    self.dx = lanes[self.pos_x]
+    self.dy = lanes[self.pos_y]
+
+
+# ---------------------------------------
+# make instances 
+
 # Make a group
 all_sprites = pygame.sprite.Group()
 # make a fruits Group
@@ -200,7 +211,7 @@ while running:
     entity.render(screen)
     if entity != player: 
       pass
-  # Check Collisions
+  # Check Colisions
   fruit = pygame.sprite.spritecollideany(player, fruit_sprites)
   if fruit:
     fruit.reset()
